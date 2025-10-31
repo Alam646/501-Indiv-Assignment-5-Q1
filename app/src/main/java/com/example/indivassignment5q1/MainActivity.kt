@@ -22,8 +22,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.indivassignment5q1.ui.theme.IndivAssignment5Q1Theme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -95,8 +99,37 @@ fun RecipeApp(viewModel: RecipeViewModel) {
     Scaffold(
         bottomBar = { AppBottomNavigation(navController = navController) }
     ) { innerPadding ->
-        // The NavHost will go here in a future step.
-        Text("App Skeleton", modifier = Modifier.padding(innerPadding))
+        AppNavHost(
+            navController = navController,
+            viewModel = viewModel,
+            modifier = Modifier.padding(innerPadding)
+        )
+    }
+}
+
+@Composable
+fun AppNavHost(
+    navController: NavHostController,
+    viewModel: RecipeViewModel,
+    modifier: Modifier = Modifier
+) {
+    NavHost(navController = navController, startDestination = Routes.Home.route, modifier = modifier) {
+        composable(Routes.Home.route) {
+            Text("Home Screen - Recipe List")
+        }
+        composable(
+            route = Routes.Detail.route,
+            arguments = listOf(navArgument("recipeId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val recipeId = backStackEntry.arguments?.getInt("recipeId")
+            Text("Detail Screen for Recipe ID: $recipeId")
+        }
+        composable(Routes.Add.route) {
+            Text("Add Recipe Screen")
+        }
+        composable(Routes.Settings.route) {
+            Text("Settings Screen")
+        }
     }
 }
 
