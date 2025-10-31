@@ -4,21 +4,33 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -115,7 +127,9 @@ fun AppNavHost(
 ) {
     NavHost(navController = navController, startDestination = Routes.Home.route, modifier = modifier) {
         composable(Routes.Home.route) {
-            Text("Home Screen - Recipe List")
+            HomeScreen(viewModel = viewModel, onRecipeClick = {
+                navController.navigate(Routes.Detail.createRoute(it.id))
+            })
         }
         composable(
             route = Routes.Detail.route,
@@ -154,6 +168,31 @@ fun AppBottomNavigation(navController: NavHostController) {
                     }
                 }
             )
+        }
+    }
+}
+
+@Composable
+fun HomeScreen(viewModel: RecipeViewModel, onRecipeClick: (Recipe) -> Unit) {
+    val recipes by viewModel.recipes.collectAsState()
+
+    LazyColumn(contentPadding = PaddingValues(16.dp)) {
+        item { Text("What’s for Dinner?", style = MaterialTheme.typography.headlineMedium) }
+        item { Spacer(Modifier.height(16.dp)) }
+        items(recipes) { recipe ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .clickable { onRecipeClick(recipe) },
+                elevation = CardDefaults.cardElevation(4.dp)
+            ) {
+                Text(
+                    text = recipe.title,
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
         }
     }
 }
