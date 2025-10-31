@@ -5,8 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -17,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,12 +29,16 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -144,7 +152,11 @@ fun AppNavHost(
             DetailScreen(viewModel = viewModel, recipeId = recipeId, onBack = { navController.popBackStack() })
         }
         composable(Routes.Add.route) {
-            Text("Add Recipe Screen")
+            AddRecipeScreen(viewModel = viewModel, onRecipeAdded = {
+                navController.navigate(Routes.Home.route) {
+                    popUpTo(Routes.Home.route) { inclusive = true }
+                }
+            })
         }
         composable(Routes.Settings.route) {
             Text("Settings Screen")
@@ -226,6 +238,53 @@ fun DetailScreen(viewModel: RecipeViewModel, recipeId: Int, onBack: () -> Unit) 
             }
         } else {
             Text("Recipe not found.", modifier = Modifier.padding(innerPadding).padding(16.dp))
+        }
+    }
+}
+
+@Composable
+fun AddRecipeScreen(viewModel: RecipeViewModel, onRecipeAdded: () -> Unit) {
+    var title by remember { mutableStateOf("") }
+    var ingredients by remember { mutableStateOf("") }
+    var steps by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text("Add a New Recipe", style = MaterialTheme.typography.headlineMedium)
+        OutlinedTextField(
+            value = title,
+            onValueChange = { title = it },
+            label = { Text("Recipe Title") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = ingredients,
+            onValueChange = { ingredients = it },
+            label = { Text("Ingredients") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        OutlinedTextField(
+            value = steps,
+            onValueChange = { steps = it },
+            label = { Text("Steps") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 5
+        )
+        Button(
+            onClick = {
+                if (title.isNotBlank() && ingredients.isNotBlank() && steps.isNotBlank()) {
+                    viewModel.addRecipe(title, ingredients, steps)
+                    onRecipeAdded()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Save Recipe")
         }
     }
 }
