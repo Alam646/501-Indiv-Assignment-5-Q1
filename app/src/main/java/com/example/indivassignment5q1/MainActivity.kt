@@ -159,7 +159,7 @@ fun AppNavHost(
             })
         }
         composable(Routes.Settings.route) {
-            Text("Settings Screen")
+            SettingsScreen()
         }
     }
 }
@@ -289,10 +289,24 @@ fun AddRecipeScreen(viewModel: RecipeViewModel, onRecipeAdded: () -> Unit) {
     }
 }
 
+@Composable
+fun SettingsScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text("Settings", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Settings for the recipe app will be configured here.")
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     IndivAssignment5Q1Theme {
-        RecipeApp(viewModel = RecipeViewModel())
+        // Previewing a specific screen like AddRecipeScreen is often more useful.
+        AddRecipeScreen(viewModel = RecipeViewModel(), onRecipeAdded = {})
     }
 }
