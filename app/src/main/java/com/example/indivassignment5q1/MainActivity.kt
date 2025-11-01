@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,10 +30,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -66,12 +69,13 @@ data class Recipe(
     val steps: String
 )
 
-// The ViewModel holds the application's state in memory.
+// The ViewModel holds the application's state, surviving configuration changes like screen rotations.
 class RecipeViewModel : ViewModel() {
     private val _recipes = MutableStateFlow<List<Recipe>>(emptyList())
     val recipes = _recipes.asStateFlow()
 
     init {
+        // Starting with a default list of recipes for demonstration.
         _recipes.value = listOf(
             Recipe(
                 id = 1,
@@ -95,7 +99,7 @@ class RecipeViewModel : ViewModel() {
     }
 }
 
-// Sealed class for defining navigation routes for type safety.
+// Using a sealed class for routes provides type safety and avoids string-based errors.
 sealed class Routes(val route: String, val label: String, val icon: ImageVector) {
     object Home : Routes("home", "Home", Icons.Default.Home)
     object Add : Routes("add", "Add", Icons.Default.Add)
@@ -106,6 +110,7 @@ sealed class Routes(val route: String, val label: String, val icon: ImageVector)
 }
 
 class MainActivity : ComponentActivity() {
+    // The `by viewModels()` delegate correctly scopes the ViewModel to the Activity's lifecycle.
     private val viewModel: RecipeViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -153,6 +158,7 @@ fun AppNavHost(
         }
         composable(Routes.Add.route) {
             AddRecipeScreen(viewModel = viewModel, onRecipeAdded = {
+                // After adding, pop back to Home to provide a clean navigation flow.
                 navController.navigate(Routes.Home.route) {
                     popUpTo(Routes.Home.route) { inclusive = true }
                 }
@@ -177,11 +183,19 @@ fun AppBottomNavigation(navController: NavHostController) {
                 icon = { Icon(screen.icon, contentDescription = screen.label) },
                 label = { Text(screen.label) },
                 selected = currentRoute == screen.route,
+                colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                ),
                 onClick = {
                     navController.navigate(screen.route) {
-                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                        // This logic ensures tapping "Home" clears the back stack for a fresh start.
+                        if (screen.route == Routes.Home.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                inclusive = true
+                            }
+                        }
+                        // Avoid creating multiple copies of the same screen on the back stack.
                         launchSingleTop = true
-                        restoreState = true
                     }
                 }
             )
@@ -202,7 +216,10 @@ fun HomeScreen(viewModel: RecipeViewModel, onRecipeClick: (Recipe) -> Unit) {
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
                     .clickable { onRecipeClick(recipe) },
-                elevation = CardDefaults.cardElevation(4.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             ) {
                 Text(
                     text = recipe.title,
@@ -224,7 +241,12 @@ fun DetailScreen(viewModel: RecipeViewModel, recipeId: Int, onBack: () -> Unit) 
         topBar = {
             TopAppBar(
                 title = { Text(recipe?.title ?: "Recipe not found") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } }
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
         }
     ) { innerPadding ->
@@ -282,7 +304,10 @@ fun AddRecipeScreen(viewModel: RecipeViewModel, onRecipeAdded: () -> Unit) {
                     onRecipeAdded()
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary
+            )
         ) {
             Text("Save Recipe")
         }
@@ -306,7 +331,7 @@ fun SettingsScreen() {
 @Composable
 fun DefaultPreview() {
     IndivAssignment5Q1Theme {
-        // Previewing a specific screen like AddRecipeScreen is often more useful.
+        // A direct ViewModel instance is safe here because Previews run in a sandbox environment.
         AddRecipeScreen(viewModel = RecipeViewModel(), onRecipeAdded = {})
     }
 }
