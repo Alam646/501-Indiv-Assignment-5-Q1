@@ -323,7 +323,7 @@ fun SettingsScreen() {
     ) {
         Text("Settings", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Settings for the recipe app will be configured here.")
+        Text("Settings Sample for the recipe app")
     }
 }
 
